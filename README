@@ -1,0 +1,19 @@
+Простой xmpp бот-блокнот. Использует MySQL для хранения записей.
+Создание таблицы: 
+create table data (id INT NOT NULL AUTO_INCREMENT, alias VARCHAR(255),  jabberid VARCHAR(200) NOT NULL, text MEDIUMTEXT, PRIMARY KEY (jabberid, id));
+
+Пример конфига (longnote.conf):
+
+[Account]
+jid=test@maximko.org
+pass=secretpass
+res=NetBeans
+
+[MySQL]
+host=localhost
+user=longnote
+pass=secretpass
+database=longdb
+
+[Strings]
+status=HELP - список команд.
