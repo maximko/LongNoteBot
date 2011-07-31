@@ -15,6 +15,7 @@ import re
 def mainf():
     global c
     global bot
+    global database
     config = ConfigParser.ConfigParser()
     config.read('longnote.conf')
     jabberID = JID(config.get('Account', 'jid'))
@@ -58,6 +59,7 @@ def messageh(connection, message):
         add(message)
 
 def sendall(message):
+    database.ping()
     c.execute("""select id, text from data where jabberid = %s""",
                                            re.sub(r"\/.*", "", str(message.getFrom())))
     data = c.fetchall()
@@ -67,6 +69,7 @@ def sendall(message):
     bot.send(Message(message.getFrom(), msg))
 
 def add(message):
+    database.ping()
     if (c.execute("""insert into data values(NULL, %s, %s, %s)""",
                 ("", re.sub(r"\/.*", "", str(message.getFrom())), message.getBody())) == 1):
         c.execute("""select id from data where jabberid = %s order by id desc limit 1;""",
@@ -77,6 +80,7 @@ def add(message):
         bot.send(Message(message.getFrom(), "Внезапно возникла ошибка."))
 
 def delete(message):
+    database.ping()
     if (len(message.getBody()) > 5):
         if (c.execute("""delete from data where jabberid = %s and id = %s""",
              (re.sub(r"\/.*", "", str(message.getFrom())), str(message.getBody()[5:]))) == 1):
@@ -87,6 +91,7 @@ def delete(message):
         bot.send(Message(message.getFrom(), "Использование: del #<id>"))
 
 def show(message):
+    database.ping()
     if (len(message.getBody()) != 1):
         if (c.execute("""select text from data where jabberid = %s and id = %s""",
               (re.sub(r"\/.*", "", str(message.getFrom())), message.getBody()[1:])) == 1):
