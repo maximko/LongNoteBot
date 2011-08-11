@@ -12,10 +12,33 @@ import ConfigParser
 import MySQLdb
 import re
 
+class DataBase:
+    connection = None
+    def __init__(self, host, user, passwd, database):
+        self.host = host
+        self.user = user
+        self.passwd = passwd
+        self.database = database
+    
+    def connect(self):
+        self.connection = MySQLdb.connect(host=self.host, user=self.user,
+                                          passwd=self.passwd, db=self.database,
+                                          use_unicode = 1, charset='utf8')
+
+    def cursor(self):
+        self.connection = None
+        try:
+            print "1111"
+            return self.connection.cursor()
+        except Exception, e:
+            print e
+            self.connect()
+            return self.connection.cursor()
+
+
 def mainf():
-    global c
+    global db
     global bot
-    global database
     config = ConfigParser.ConfigParser()
     config.read('longnote.conf')
     jabberID = JID(config.get('Account', 'jid'))
@@ -26,17 +49,8 @@ def mainf():
     bot.send(Presence(show="chat", status=config.get('Strings', 'status')))
     bot.RegisterHandler('presence',presenseh)
     bot.RegisterHandler('message', messageh)
-    database = MySQLdb.connect(host=config.get('MySQL', 'host'),
-                               user=config.get('MySQL', 'user'),
-                               passwd=config.get('MySQL', 'pass'),
-                               db=config.get('MySQL', 'database'),
-                               use_unicode = 1,
-                               charset='utf8')
-    database.set_character_set('utf8')
-    c = database.cursor()
-    c.execute('SET NAMES utf8')
-    c.execute('SET CHARACTER SET utf8')
-    c.execute('SET character_set_connection=utf8')
+    db = DataBase(config.get('MySQL', 'host'), config.get('MySQL', 'user'),
+                  config.get('MySQL', 'pass'), config.get('MySQL', 'database'))
     while 1:
         bot.Process(1)
 
@@ -59,7 +73,7 @@ def messageh(connection, message):
         add(message)
 
 def sendall(message):
-    database.ping()
+    c = db.cursor()
     c.execute("""select id, text from data where jabberid = %s""",
                                            re.sub(r"\/.*", "", str(message.getFrom())))
     data = c.fetchall()
@@ -69,7 +83,7 @@ def sendall(message):
     bot.send(Message(message.getFrom(), msg))
 
 def add(message):
-    database.ping()
+    c = db.cursor()
     if (c.execute("""insert into data values(NULL, %s, %s, %s)""",
                 ("", re.sub(r"\/.*", "", str(message.getFrom())), message.getBody())) == 1):
         c.execute("""select id from data where jabberid = %s order by id desc limit 1;""",
@@ -80,7 +94,7 @@ def add(message):
         bot.send(Message(message.getFrom(), "Внезапно возникла ошибка."))
 
 def delete(message):
-    database.ping()
+    c = db.cursor()
     if (len(message.getBody()) > 5):
         if (c.execute("""delete from data where jabberid = %s and id = %s""",
              (re.sub(r"\/.*", "", str(message.getFrom())), str(message.getBody()[5:]))) == 1):
@@ -91,7 +105,7 @@ def delete(message):
         bot.send(Message(message.getFrom(), "Использование: del #<id>"))
 
 def show(message):
-    database.ping()
+    c = db.cursor()
     if (len(message.getBody()) != 1):
         if (c.execute("""select text from data where jabberid = %s and id = %s""",
               (re.sub(r"\/.*", "", str(message.getFrom())), message.getBody()[1:])) == 1):
@@ -112,4 +126,5 @@ all - вывод всех заметок с номерами
 del #<номер заметки> - удаление заметки (del #123)"""
     bot.send(Message(message.getFrom(), helpmsg))
 
-mainf()
+if __name__ == '__main__':
+    mainf()
