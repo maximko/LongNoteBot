@@ -26,12 +26,10 @@ class DataBase:
                                           use_unicode = 1, charset='utf8')
 
     def cursor(self):
-        self.connection = None
         try:
-            print "1111"
+            self.connection.ping()
             return self.connection.cursor()
-        except Exception, e:
-            print e
+        except (AttributeError, MySQLdb.OperationalError):
             self.connect()
             return self.connection.cursor()
 
