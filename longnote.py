@@ -29,7 +29,8 @@ class DataBase:
         try:
             self.connection.ping()
             return self.connection.cursor()
-        except (AttributeError, MySQLdb.OperationalError):
+        except (AttributeError, MySQLdb.OperationalError), e:
+            print "Connect to Database... [%s]" % e
             self.connect()
             return self.connection.cursor()
 
@@ -79,6 +80,7 @@ def sendall(message):
     for row in data:
         msg += "\n#" + str(row[0]) + " --> " + row[1].encode('utf-8')
     bot.send(Message(message.getFrom(), msg))
+    c.close()
 
 def add(message):
     c = db.cursor()
@@ -90,6 +92,7 @@ def add(message):
         bot.send(Message(message.getFrom(), "Заметка #" + str(num[0]) + " добавлена."))
     else:
         bot.send(Message(message.getFrom(), "Внезапно возникла ошибка."))
+    c.close()
 
 def delete(message):
     c = db.cursor()
@@ -101,6 +104,7 @@ def delete(message):
             bot.send(Message(message.getFrom(), "При удалении возникла ошибка."))
     else:
         bot.send(Message(message.getFrom(), "Использование: del #<id>"))
+    c.close()
 
 def show(message):
     c = db.cursor()
@@ -116,6 +120,7 @@ def show(message):
             bot.send(Message(message.getFrom(), "Неверный номер заметки."))
     else:
         bot.send(Message(message.getFrom(), "Использование: #<id>"))
+    c.close()
         
 def sendhelp(message):
     helpmsg = """Для добавления заметки просто отошлите ее боту.
