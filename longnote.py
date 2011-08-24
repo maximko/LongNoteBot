@@ -60,16 +60,17 @@ def presenseh(connection, presense):
         connection.send(Presence(presense.getFrom(), "unsubscribed"))
 
 def messageh(connection, message):
-    if (message.getBody() == "all"):
-        sendall(message)
-    elif (message.getBody()[:3] == "del"):
-        delete(message)
-    elif (message.getBody()[0] == "#"):
-        show(message)
-    elif (message.getBody() == "HELP"):
-        sendhelp(message)
-    else:
-        add(message)
+    if (message.getBody() != None):
+        if (message.getBody() == "all"):
+            sendall(message)
+        elif (message.getBody()[:3] == "del"):
+            delete(message)
+        elif (message.getBody()[0] == "#"):
+            show(message)
+        elif (message.getBody() == "HELP"):
+            sendhelp(message)
+        else:
+            add(message)
 
 def sendall(message):
     c = db.cursor()
